@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE repositories SYSTEM "/dtd/repositories.dtd">
+<repositories xmlns="" version="1.0">
+  <repo quality="experimental" status="unofficial">
+    <name><![CDATA[CloudModel]]></name>
+    <description><![CDATA[Collection of ebuilds for CloudModel]]></description>
+    <homepage>http://cloud-model.org/</homepage>
+    <owner>
+      <email>info@cloud-model.org</email>
+    </owner>
+    <source type="git">git://github.com/cloudmodel/overlay.git</source>
+  </repo>
+</repositories>
