@@ -19,8 +19,8 @@ IUSE="livestat +arbiter broker poller reactionner receiver scheduler"
 
 RDEPEND="
 	dev-python/pyro
-  dev-python/pycurl
-  dev-python/paramiko
+	dev-python/pycurl
+	dev-python/paramiko
 	livestat? ( dev-python/simplejson )
 	poller? ( net-analyzer/nagios-plugins )
 	"
@@ -74,13 +74,14 @@ src_install() {
 	rm -rf ${D}$(python_get_sitedir)/skonf
 
 	keepdir /var/lib/${PN}
-	fowners shinken:shinken "/var/lib/${PN}"
+	fowners -R shinken:shinken "/var/lib/${PN}"
 	fperms 750 "/var/lib/${PN}"
 	keepdir "/var/run/${PN}"
 	fowners shinken:shinken "/var/run/${PN}"
-  echo "D /var/run/shinken 0755 shinken shinken" > /etc/tmpfile.d/shinken.conf
+	mkdir -p ${D}/etc/tmpfiles.d
+	echo "D /var/run/shinken 0755 shinken shinken" > ${D}/etc/tmpfiles.d/shinken.conf
 	keepdir "/var/log/${PN}"
-	fowners shinken:shinken "/var/log/${PN}"
+	fowners -R shinken:shinken "/var/log/${PN}"
 	fperms 750 "/var/log/${PN}"
 
 	insinto "/usr/lib/nagios/plugins"
@@ -104,20 +105,16 @@ src_install() {
 		newman for_fedora/man/shinken-${mod}.8 shinken-${mod}.8
 	done
 
-	#newconfd ${FILESDIR}/${PN}.confd ${PN}
-	#newinitd ${FILESDIR}/${PN}.initd ${PN}
-
 	for mod in ${SHINKENMODULES}; do
 		if use $mod; then
 			systemd_newunit for_fedora/systemd/shinken-${mod}.service ${PN}-${mod}.service
     
-      sed -i s,ExecStart=/usr/sbin/,ExecStart=/usr/bin/python2\ /usr/bin/, "${D}/usr/lib/systemd/system/${PN}-${mod}.service"
+			#sed -i s,ExecStart=/usr/sbin/,ExecStart=/usr/bin/python2\ /usr/bin/, "${D}/usr/lib/systemd/system/${PN}-${mod}.service"
 		fi
 	done
   
   # Use python2 shebang for binaries instead of just python
-  for bin in ${D}/usr/bin/*; do
-    sed -i s,\#\!/usr/bin/env\ python,\#\!/usr/bin/env\ python2, $bin
-  done
-  
+	for bin in ${D}/usr/bin/*; do
+		sed -i s,\#\!/usr/bin/env\ python,\#\!/usr/bin/env\ python2, $bin
+	done
 }
