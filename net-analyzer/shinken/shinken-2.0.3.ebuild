@@ -18,7 +18,9 @@ KEYWORDS="~amd64 ~x86"
 IUSE="livestat +arbiter broker poller reactionner receiver scheduler"
 
 RDEPEND="
-	dev-python/pyro:3
+	dev-python/pyro
+  dev-python/pycurl
+  dev-python/paramiko
 	livestat? ( dev-python/simplejson )
 	poller? ( net-analyzer/nagios-plugins )
 	"
@@ -30,8 +32,8 @@ SHINKENMODULES="arbiter broker poller reactionner receiver scheduler"
 src_unpack() {
 	unpack ${A}
 	cd ${S}
-	find . -name '.gitignore' -exec rm -f {} \;
-	find . -name 'void_for_git' -exec rm -f {} \;
+	find . -name '.gitignore' -exec rm -f {} \\\;
+	find . -name 'void_for_git' -exec rm -f {} \\\;
 #	epatch "${FILESDIR}/${P}.patch"
 }
 
@@ -54,7 +56,7 @@ src_configure() {
 pkg_setup() {
 	ebegin "Creating shinken user and group"
 	enewgroup shinken
-	enewuser shinken -1 -1 -1 shinken
+	enewuser shinken -1 -1 -1 "shinken,nagios"
 	eend $?
 	
 	python_set_active_version 2
@@ -76,6 +78,7 @@ src_install() {
 	fperms 750 "/var/lib/${PN}"
 	keepdir "/var/run/${PN}"
 	fowners shinken:shinken "/var/run/${PN}"
+  echo "D /var/run/shinken 0755 shinken shinken" > /etc/tmpfile.d/shinken.conf
 	keepdir "/var/log/${PN}"
 	fowners shinken:shinken "/var/log/${PN}"
 	fperms 750 "/var/log/${PN}"
@@ -107,6 +110,14 @@ src_install() {
 	for mod in ${SHINKENMODULES}; do
 		if use $mod; then
 			systemd_newunit for_fedora/systemd/shinken-${mod}.service ${PN}-${mod}.service
+    
+      sed -i s,ExecStart=/usr/sbin/,ExecStart=/usr/bin/python2\ /usr/bin/, "${D}/usr/lib/systemd/system/${PN}-${mod}.service"
 		fi
 	done
+  
+  # Use python2 shebang for binaries instead of just python
+  for bin in ${D}/usr/bin/*; do
+    sed -i s,\#\!/usr/bin/env\ python,\#\!/usr/bin/env\ python2, $bin
+  done
+  
 }
